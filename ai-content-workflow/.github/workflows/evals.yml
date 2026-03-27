@@ -1,0 +1,47 @@
+name: AI Content Pipeline Evals
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Install dependencies
+        run: |
+          pip install pytest pytest-cov
+      
+      - name: Run unit tests
+        run: |
+          cd ai-content-workflow
+          pytest tests/ -v --tb=short
+
+  dashboard:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Show eval dashboard
+        run: |
+          cd ai-content-workflow
+          python scripts/run_workflow.py --dashboard
+        env:
+          TINYFISH_API_KEY: ${{ secrets.TINYFISH_API_KEY }}
+
+# Run specific eval category
+# Example:
+#   pytest tests/ -v -k "tinyfish"
