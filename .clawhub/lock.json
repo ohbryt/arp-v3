@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "skills": {
+    "openclaw-tavily-search": {
+      "version": "0.1.0",
+      "installedAt": 1774561432809
+    },
+    "exa-search": {
+      "version": "1.0.0",
+      "installedAt": 1774561433000
+    },
+    "test-runner": {
+      "version": "1.0.0",
+      "installedAt": 1774561433106
+    },
+    "gws-workspace": {
+      "version": "1.1.0",
+      "installedAt": 1774561433484
+    },
+    "browser-automation": {
+      "version": "1.0.1",
+      "installedAt": 1774561433501
+    },
+    "agentlens": {
+      "version": "1.0.0",
+      "installedAt": 1774561433513
+    },
+    "openclaw-github-assistant": {
+      "version": "2.0.1",
+      "installedAt": 1774561433585
+    },
+    "openclaw-skill-docker-manager": {
+      "version": "1.0.0",
+      "installedAt": 1774561433647
+    },
+    "capability-evolver": {
+      "version": "1.39.0",
+      "installedAt": 1774561438596
+    }
+  }
+}
