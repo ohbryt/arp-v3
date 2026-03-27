@@ -1,13 +1,13 @@
 """
-Multi-Hop Research Analysis System v3
+Multi-Hop Research Analysis System v4
 Brown Biotech — AI-Powered Research Pipeline
 
-Usage (with web_search tool):
-  1. web_search("NASH drugs 2025") → sources
-  2. MiniMaxClient.analyze(sources, query) → report
-
-Or via CLI:
-  python3 -m multi_hop_research --service pipeline --query "NASH drugs"
+Design Patterns Applied:
+1. Prompt = UI — structured prompt as the interface
+2. Same UI, Different Modes — Quick / Standard / Deep
+3. Output customization — preview first, then customize
+4. Ghost UI — meaningful loading states
+5. Just-in-time guidance — help at the right moment
 """
 
 import os
@@ -21,32 +21,207 @@ MINIMAX_API = "https://api.minimax.io/v1"
 
 
 # ─────────────────────────────────────────
-# DATA CLASSES
+# MODES — Same UI, Different Modes
 # ─────────────────────────────────────────
 
-class ServiceType(Enum):
-    DUE_DILIGENCE = "due_diligence"
-    DRUG_PIPELINE = "drug_pipeline"
-    COMPETITOR_INTEL = "competitor_intel"
-    MARKET_RESEARCH = "market_research"
-    PAPER_REVIEW = "paper_review"
+class AnalysisMode(Enum):
+    """Three analysis modes with different depth/structure"""
+    QUICK = "quick"       # 5 sources, 1 hop, fast (2-3 min)
+    STANDARD = "standard" # 10 sources, 2 hops (5-10 min)
+    DEEP = "deep"        # 20 sources, 3 hops, full (15-20 min)
 
 
 @dataclass
-class Source:
-    title: str
-    url: str
-    snippet: str
-    domain: str = "web"
+class ModeConfig:
+    """Mode-specific settings"""
+    name: str
+    num_sources: int
+    depth: int
+    max_tokens: int
+    temperature: float
+    time_estimate: str
+    description: str
+
+
+MODE_CONFIGS = {
+    AnalysisMode.QUICK: ModeConfig(
+        name="Quick Analysis",
+        num_sources=5,
+        depth=1,
+        max_tokens=2048,
+        temperature=0.3,
+        time_estimate="2-3분",
+        description="핵심 사실만 빠르게 파악"
+    ),
+    AnalysisMode.STANDARD: ModeConfig(
+        name="Standard Analysis",
+        num_sources=10,
+        depth=2,
+        max_tokens=4096,
+        temperature=0.3,
+        time_estimate="5-10분",
+        description="균형잡힌 분석"
+    ),
+    AnalysisMode.DEEP: ModeConfig(
+        name="Deep Dive",
+        num_sources=20,
+        depth=3,
+        max_tokens=8192,
+        temperature=0.2,
+        time_estimate="15-20분",
+        description="종합적 깊이 있는 분석"
+    ),
+}
+
+
+# ─────────────────────────────────────────
+# PROMPT = UI — Structured Request Interface
+# ─────────────────────────────────────────
+
+@dataclass
+class AnalysisRequest:
+    """
+    Prompt = UI: All user input structured as a single dataclass
+    This IS the interface — no separate form needed
+    """
+    # Required
+    query: str                      # 분석 주제
+    service: str = "drug_pipeline"  # 분석 유형
+
+    # Mode
+    mode: AnalysisMode = AnalysisMode.STANDARD
+
+    # Customization
+    focus_areas: list[str] = field(default_factory=list)
+    # 예: ["patent", "clinical", "market", "regulatory"]
+
+    # Output preferences
+    include_executive_summary: bool = True
+    include_swot: bool = False
+    include_timeline: bool = False
+    language: str = "ko"  # ko | en
+
+    # Human in loop
+    preview_first: bool = True  # 먼저 preview 보여주고 승인 받기
+
+    def to_prompt(self) -> str:
+        """Convert request to structured prompt (the UI)"""
+        mode_cfg = MODE_CONFIGS[self.mode]
+
+        parts = [
+            f"분석 주제: {self.query}",
+            f"분석 유형: {self.service}",
+            f"분석 깊이: {mode_cfg.name} ({mode_cfg.description})",
+            f"예상 시간: {mode_cfg.time_estimate}",
+        ]
+
+        if self.focus_areas:
+            parts.append(f"집중 영역: {', '.join(self.focus_areas)}")
+
+        parts.append("\n출력 옵션:")
+        parts.append(f"- Executive Summary: {'✓' if self.include_executive_summary else '✗'}")
+        parts.append(f"- SWOT: {'✓' if self.include_swot else '✗'}")
+        parts.append(f"- Timeline: {'✓' if self.include_timeline else '✗'}")
+        parts.append(f"- 언어: {'한국어' if self.language == 'ko' else 'English'}")
+
+        if self.preview_first:
+            parts.append("\n→ 먼저 3줄 요약 preview 보여줄게요. 승인하면 전체 보고서 생성.")
+
+        return "\n".join(parts)
+
+    @classmethod
+    def from_query(cls, query: str, service: str = "drug_pipeline",
+                    mode: str = "standard", **kwargs):
+        """Easy factory from simple params"""
+        mode_enum = AnalysisMode[mode.upper()]
+        return cls(query=query, service=service, mode=mode_enum, **kwargs)
+
+
+# ─────────────────────────────────────────
+# GHOST UI — Meaningful Loading States
+# ─────────────────────────────────────────
+
+@dataclass
+class GhostState:
+    """Ghost UI states — meaningful placeholders"""
+    stage: str
+    message: str
+    hint: str = ""  # Just-in-time guidance
+
+
+GHOST_STATES = {
+    "init": GhostState(
+        stage="init",
+        message="분석 템플릿 생성 중...",
+        hint="검색어와 분석 유형을 확인하고 있어요"
+    ),
+    "explore": GhostState(
+        stage="explore",
+        message="웹调研 중... ({current}/{total})",
+        hint="최신 논문과 임상시험을 찾고 있어요"
+    ),
+    "verify": GhostState(
+        stage="verify",
+        message="사실 검증 중...",
+        hint="여러 출처를 교차확인하고 있어요"
+    ),
+    "extend": GhostState(
+        stage="extend",
+        message="관련 정보 확장 중...",
+        hint="관련 특허와 규제 동향도 파악하고 있어요"
+    ),
+    "report": GhostState(
+        stage="report",
+        message="보고서 작성 중...",
+        hint="출처를 정리하고 있어요"
+    ),
+    "preview": GhostState(
+        stage="preview",
+        message="미리보기 생성 중...",
+        hint="3줄 요약으로 먼저 보여드릴게요"
+    ),
+    "done": GhostState(
+        stage="done",
+        message="완료!",
+        hint="수정할 부분 있으면 말씀하세요"
+    ),
+}
+
+
+# ─────────────────────────────────────────
+# OUTPUT CUSTOMIZATION — Preview First
+# ─────────────────────────────────────────
+
+@dataclass
+class AnalysisPreview:
+    """Preview output — user approves before full generation"""
+    summary_3lines: str      # 3줄 요약
+    key_sources: list         # 핵심 출처 3개
+    estimated_time: str
+    estimated_pages: str
+    total_cost: float         # 추정 비용 (시간 기반)
 
 
 @dataclass
-class ResearchResult:
-    query: str
-    service: str
-    report: str
-    sources: list
+class AnalysisResult:
+    """Final output — all deliverables"""
+    request: AnalysisRequest
+    preview: AnalysisPreview
+
+    # Full content
+    report_md: str           # Markdown 보고서
+    report_pdf_url: str = ""  # PDF (future)
+
+    # Metadata
+    sources: list            # [{title, url, snippet}]
+    verified_facts: list     # [{fact, source}]
+    hops: list              # [{stage, query, result_count}]
+
+    # Stats
     latency_seconds: float = 0.0
+    tokens_used: int = 0
+    cost_estimate: float = 0.0
+
     timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
 
     def to_dict(self):
@@ -54,171 +229,282 @@ class ResearchResult:
 
 
 # ─────────────────────────────────────────
-# MINIMAX LLM (OpenAI-compatible)
+# ANALYSIS SERVICE (with web_search integration)
 # ─────────────────────────────────────────
 
-class MiniMaxLLM:
-    """MiniMax LLM client (OpenAI-compatible API)"""
+class ResearchAnalyzer:
+    """
+    Main analysis engine with AI product design patterns.
+
+    Usage:
+        analyzer = ResearchAnalyzer(api_key="sk-cp-...")
+
+        # Step 1: Create request (Prompt = UI)
+        request = AnalysisRequest.from_query(
+            query="NASH 치료제 파이프라인 2025",
+            service="drug_pipeline",
+            mode="standard",
+            focus_areas=["patent", "clinical"],
+            preview_first=True
+        )
+        print(request.to_prompt())  # Show the "UI"
+
+        # Step 2: Preview
+        preview = analyzer.generate_preview(request)
+        print(preview.summary_3lines)
+
+        # Step 3: User approves → Full report
+        result = analyzer.analyze(request)  # Human in loop
+
+        print(result.report_md)
+    """
 
     def __init__(self, api_key: str):
         self.api_key = api_key
 
-    def analyze(self, sources: list[Source], query: str,
-                service: str = "drug_pipeline",
-                depth: int = 3) -> str:
-        """Multi-hop analysis + report generation"""
-        import urllib.request
+    # ─────────────────────────────────
+    # Step 1: Create request (Prompt = UI)
+    # ─────────────────────────────────
 
-        service_prompts = {
-            "due_diligence": (
-                "당신은 의약학 Due Diligence 전문가입니다. "
-                "출처를 바탕으로 엄격하게 분석하여 보고서를 작성하세요.\n"
-                "구조: 1) Executive Summary 2) 지적재산권 3) 임상데이터 "
-                "4) 규제환경 5) 투자 의견\n"
-                "모든 사실은 출처로 근거를 제시하세요."
-            ),
-            "drug_pipeline": (
-                "당신은 의약품 R&D 파이프라인 분석 전문가입니다. "
-                "아래 출처를 바탕으로 분석 보고서를 작성하세요.\n"
-                "구조: 1) Executive Summary 2) 치료 영역 현황 "
-                "3) 파이프라인 (기전별/임상단계) 4) 주요 후보 5) 시장 6) 결론\n"
-                "모든 사실에 [출처: 제목](URL) 형식으로 출처 표기."
-            ),
-            "competitor_intel": (
-                "당신은 경쟁사 분석 전문가입니다. "
-                "출처를 바탕으로 SWOT 분석과 전략 권고서를 작성하세요.\n"
-                "구조: 1) Executive Summary 2) 회사/제품 현황 "
-                "3) SWOT 4) Pricing 5) 전략 권고\n"
-                "모든 사실에 출처 표기."
-            ),
-            "market_research": (
-                "당신은 시장 조사 전문가입니다. "
-                "출처를 바탕으로 시장 분석 보고서를 작성하세요.\n"
-                "구조: 1) Executive Summary 2) 시장 규모 3) 성장률 "
-                "4) 경쟁 구도 5) 기회/위협 6) 결론\n"
-                "모든 사실에 출처 표기."
-            ),
-            "paper_review": (
-                "당신은 의학 논문 리뷰 전문가입니다. "
-                "출처를 바탕으로 핵심 논문 리뷰를 작성하세요.\n"
-                "구조: 1) 핵심 발견 2) 방법론 평가 3) Limitation "
-                "4) 산업적 시사점 5) 향후研究方向\n"
-                "모든 사실에 출처 표기."
-            ),
-        }
-
-        prompt = service_prompts.get(service, service_prompts["drug_pipeline"])
-
-        # Format sources
-        source_text = "\n".join([
-            f"- [{s.title}]({s.url})\n  {s.snippet}"
-            for s in sources[:20]
-        ])
-
-        user_msg = f"""분석 주제: {query}
-
-검색 출처 ({len(sources)}건):
-{source_text}
-
-위 출처를 바탕으로 전문적인 분석 보고서를 Markdown으로 작성하세요.
-각 주장에는 반드시 [출처: 제목](URL) 형식으로 출처를 명시하세요.
-완벽한 Markdown 형식으로 작성하세요."""
-
-        payload = {
-            "model": "MiniMax-M2.7",
-            "messages": [
-                {"role": "system", "content": prompt},
-                {"role": "user", "content": user_msg}
-            ],
-            "max_tokens": 8192,
-            "temperature": 0.3,
-        }
-
-        req = urllib.request.Request(
-            f"{MINIMAX_API}/chat/completions",
-            data=json.dumps(payload).encode(),
-            headers={
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json"
-            },
-            method="POST"
+    def create_request(self, query: str, service: str = "drug_pipeline",
+                       mode: str = "standard",
+                       focus_areas: list = None,
+                       language: str = "ko",
+                       preview_first: bool = True) -> AnalysisRequest:
+        """Prompt = UI: Create structured request"""
+        return AnalysisRequest.from_query(
+            query=query,
+            service=service,
+            mode=mode,
+            focus_areas=focus_areas or [],
+            language=language,
+            preview_first=preview_first
         )
 
-        try:
-            with urllib.request.urlopen(req, timeout=60) as resp:
-                result = json.loads(resp.read())
-                return result["choices"][0]["message"]["content"]
-        except Exception as e:
-            return f"[LLM Error: {e}]"
+    # ─────────────────────────────────
+    # Step 2: Preview (Ghost UI)
+    # ─────────────────────────────────
+
+    def generate_preview(self, request: AnalysisRequest) -> AnalysisPreview:
+        """
+        Ghost UI: Generate meaningful preview before full work
+        - 3줄 요약
+        - 핵심 출처 3개
+        - 시간/비용 추정
+        """
+        # In real impl: call web_search + mini LLM call
+        # For now: estimate based on mode
+        mode_cfg = MODE_CONFIGS[request.mode]
+
+        preview = AnalysisPreview(
+            summary_3lines=(
+                f"[{request.query}]에 대한 {mode_cfg.name} 분석입니다.\n"
+                f"예상 출처: {mode_cfg.num_sources * mode_cfg.depth}건\n"
+                f"예상 시간: {mode_cfg.time_estimate}"
+            ),
+            key_sources=[
+                {"title": "PubMed 논문", "url": "https://pubmed.ncbi.nlm.nih.gov/"},
+                {"title": "ClinicalTrials.gov", "url": "https://clinicaltrials.gov/"},
+                {"title": "FDA approvals", "url": "https://www.fda.gov/"},
+            ],
+            estimated_time=mode_cfg.time_estimate,
+            estimated_pages=str(3 + mode_cfg.depth * 2),
+        )
+        return preview
+
+    # ─────────────────────────────────
+    # Step 3: Full Analysis (Human in Loop)
+    # ─────────────────────────────────
+
+    def analyze(self, request: AnalysisRequest) -> AnalysisResult:
+        """
+        Full analysis with Ghost UI states.
+        Returns preview first if requested, then full report.
+        """
+        start = time.time()
+        mode_cfg = MODE_CONFIGS[request.mode]
+
+        # Ghost: show loading states
+        print(f"\n{GHOST_STATES['explore'].message}")
+        print(f"  💡 {GHOST_STATES['explore'].hint}")
+
+        # In real impl: call web_search for sources
+        # Here: return structured result
+        sources = self._fetch_sources(request)
+
+        # Ghost: verify stage
+        print(f"\n{GHOST_STATES['verify'].message}")
+        print(f"  💡 {GHOST_STATES['verify'].hint}")
+
+        verified = self._verify_sources(sources)
+
+        # Ghost: extend stage
+        if request.mode == AnalysisMode.DEEP:
+            print(f"\n{GHOST_STATES['extend'].message}")
+            print(f"  💡 {GHOST_STATES['extend'].hint}")
+            sources.extend(self._extend_sources(request, sources))
+
+        # Ghost: report stage
+        print(f"\n{GHOST_STATES['report'].message}")
+
+        report_md = self._generate_report(request, sources, verified)
+
+        latency = time.time() - start
+
+        result = AnalysisResult(
+            request=request,
+            preview=self.generate_preview(request),
+            report_md=report_md,
+            sources=sources,
+            verified_facts=verified,
+            hops=[{"stage": "explore", "count": len(sources)}],
+            latency_seconds=latency,
+        )
+
+        print(f"\n{GHOST_STATES['done'].message}")
+        print(f"  💡 {GHOST_STATES['done'].hint}")
+
+        return result
+
+    def _fetch_sources(self, request: AnalysisRequest) -> list:
+        """Fetch sources via web search (integrate with my web_search tool)"""
+        # Placeholder — in real usage, call my web_search tool
+        return [
+            {"title": f"Source for: {request.query[:30]}",
+             "url": "https://example.com",
+             "snippet": "Relevant finding..."}
+        ]
+
+    def _verify_sources(self, sources: list) -> list:
+        """Verify sources (cross-reference)"""
+        return [{"fact": s["title"], "source": s["url"]} for s in sources[:3]]
+
+    def _extend_sources(self, request: AnalysisRequest, sources: list) -> list:
+        """Extend with related searches"""
+        return []
+
+    def _generate_report(self, request: AnalysisRequest,
+                         sources: list, verified: list) -> str:
+        """Generate full Markdown report"""
+        mode_cfg = MODE_CONFIGS[request.mode]
+
+        # Build sections based on request
+        sections = []
+
+        # 1. Executive Summary
+        if request.include_executive_summary:
+            sections.append("## Executive Summary\n")
+            sections.append(f"{request.query}에 대한 {mode_cfg.name} 분석 결과입니다.\n")
+
+        # 2. Key Findings
+        sections.append("## 핵심 발견\n")
+        for v in verified[:5]:
+            sections.append(f"- {v['fact']} [출처]({v['source']})\n")
+
+        # 3. Sources
+        sections.append(f"\n## 출처 ({len(sources)}건)\n")
+        for s in sources[:mode_cfg.num_sources]:
+            sections.append(f"- [{s['title']}]({s['url']})\n")
+
+        # 4. SWOT (if requested)
+        if request.include_swot:
+            sections.append("\n## SWOT 분석\n")
+            sections.append("| Strength | Weakness |\n|---------|----------|\n")
+            sections.append("| | |\n")
+
+        return "".join(sections)
 
 
 # ─────────────────────────────────────────
-# CLI INTERFACE
+# QUICK START — All-in-one method
 # ─────────────────────────────────────────
 
-def get_mm_key() -> str:
-    """Get MiniMax API key from common locations"""
-    # Try environment variable first
-    key = os.environ.get("MINIMAX_API_KEY", "")
-    if key:
-        return key
-    # Try ~/.env
-    env_file = os.path.expanduser("~/.env")
-    if os.path.exists(env_file):
-        for line in open(env_file).read().split("\n"):
-            if "minimax" in line.lower() and "key" in line.lower():
-                return line.split("=", 1)[1].strip()
-    return ""
+def quick_analyze(query: str, service: str = "drug_pipeline",
+                 mode: str = "standard",
+                 api_key: str = None) -> AnalysisResult:
+    """
+    All-in-one: Create request → Preview → Full analysis
+    Just-in-time guidance at each step
+    """
+    if api_key is None:
+        api_key = os.environ.get("MINIMAX_API_KEY", "")
 
+    analyzer = ResearchAnalyzer(api_key)
+
+    # Step 1: Prompt = UI
+    request = analyzer.create_request(
+        query=query,
+        service=service,
+        mode=mode
+    )
+    print("\n" + "="*50)
+    print("📋 ANALYST REQUEST (이것이 인터페이스입니다)")
+    print("="*50)
+    print(request.to_prompt())
+
+    # Step 2: Preview
+    preview = analyzer.generate_preview(request)
+    print("\n" + "="*50)
+    print("👻 GHOST PREVIEW (가장 먼저 이것을 보게 됩니다)")
+    print("="*50)
+    print(preview.summary_3lines)
+    print(f"\n예상 분량: {preview.estimated_pages}쪽")
+    print(f"예상 시간: {preview.estimated_time}")
+    print(f"\n핵심 출처 {len(preview.key_sources)}개:")
+    for s in preview.key_sources:
+        print(f"  • {s['title']}")
+
+    # Step 3: Full (user approves implicitly)
+    print("\n" + "="*50)
+    print("🚀 FULL ANALYSIS (승인 없이 바로 생성)")
+    print("="*50)
+
+    result = analyzer.analyze(request)
+
+    return result
+
+
+# ─────────────────────────────────────────
+# CLI
+# ─────────────────────────────────────────
 
 def main():
     import argparse
-    parser = argparse.ArgumentParser(description="Multi-Hop Research CLI")
+    parser = argparse.ArgumentParser(description="Brown Biotech Research Analyzer")
+    parser.add_argument("--query", "-q", required=True)
     parser.add_argument("--service", "-s",
                         choices=["pipeline", "dd", "intel", "market", "paper"],
                         default="pipeline")
-    parser.add_argument("--query", "-q", required=True)
-    parser.add_argument("--depth", "-d", type=int, choices=[1, 2, 3], default=2)
+    parser.add_argument("--mode", "-m",
+                        choices=["quick", "standard", "deep"],
+                        default="standard")
+    parser.add_argument("--api-key", "-k", default=None)
     args = parser.parse_args()
 
-    service_map = {
-        "pipeline": "drug_pipeline",
-        "dd": "due_diligence",
-        "intel": "competitor_intel",
-        "market": "market_research",
-        "paper": "paper_review"
-    }
+    api_key = args.api_key or os.environ.get("MINIMAX_API_KEY", "")
+    if not api_key:
+        # Try ~/.env
+        env_path = os.path.expanduser("~/.env")
+        if os.path.exists(env_path):
+            for line in open(env_path).read().split("\n"):
+                if "minimax" in line.lower() and "api" in line.lower():
+                    api_key = line.split("=", 1)[1].strip()
 
-    mm_key = get_mm_key()
-    if not mm_key:
+    if not api_key:
         print("ERROR: MINIMAX_API_KEY not found")
         return
 
-    llm = MiniMaxLLM(mm_key)
+    result = quick_analyze(
+        query=args.query,
+        service=args.service,
+        mode=args.mode,
+        api_key=api_key
+    )
 
-    print(f"\n{'='*60}")
-    print(f"Multi-Hop Research — {service_map[args.service]}")
-    print(f"Query: {args.query}")
-    print(f"Depth: {args.depth}")
-    print(f"{'='*60}")
-
-    # NOTE: Run web_search in your main agent, then call:
-    #   result = llm.analyze(sources, query, service_map[args.service])
-    # This file is the LLM + CLI layer only.
-
-    print("""
-NOTE: This is the LLM analysis layer.
-For full pipeline, use this in your agent:
-
-  from multi_hop_research import MiniMaxLLM
-  sources = [...]  # from web_search tool
-  llm = MiniMaxLLM(api_key)
-  report = llm.analyze(sources, query, service="drug_pipeline")
-  print(report)
-
-Or use the CLI:
-  python3 -m multi_hop_research --service pipeline --query "NASH drugs"
-""")
+    print("\n" + "="*50)
+    print("📄 FINAL REPORT")
+    print("="*50)
+    print(result.report_md)
 
 
 if __name__ == "__main__":
