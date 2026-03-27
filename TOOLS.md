@@ -2,6 +2,29 @@
 
 Skills define _how_ tools work. This file is for _your_ specifics — the stuff that's unique to your setup.
 
+## AI Content Pipeline (Dr. OCM)
+
+**Workflow location:** `~/openclaw/workspace/ai-content-workflow/`
+
+**TinyFish API Key:** `sk-tinyfish-d85Piw8gdzmnX4w9E5g2_vlJrSfVe7xe`
+
+**Auto-use criteria:**
+- Research request on new topic → TinyFish web scraping first
+- Drug/therapy pipeline analysis → FXR, PPAR, GLP-1, THR-β etc. web scrape
+- Market analysis, clinical trials → auto-collect → content generation
+
+**Usage:**
+```bash
+python3 scripts/run_tinyfish_research.py --topic "주제"
+python3 scripts/generate_content.py --topic "주제" --format blog|seminar|thread
+```
+
+## MERFISH Skin Atlas Data
+
+**Data location:** `~/openclaw/workspace/skin_atlas_analysis/output/merfish.h5ad` (3.1GB)
+**Key findings:** TGFB2 ↓-13.8, PDGFA ↓-14.3, TGFB1 ↓-11.8, FGF7 ↓-12.6
+**Use for:** Anti-aging cosmetics R&D, skincare target discovery
+
 ## What Goes Here
 
 Things like:
