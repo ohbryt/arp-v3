@@ -1,129 +1,101 @@
-# ARP v3 — Hyper-Agent Research Pipeline
+# ARP v3 KG-CoT — Hyper-Agent Research Pipeline
 
-> Multi-LLM team with self-evolution (HyperAgents concept) + fault tolerance (AgentScope) + role-based routing
+> Multi-LLM team with Knowledge Graph CoT (Morrissette-style) + self-evolution
 
----
+## Concept
 
-## Model Team
+Based on J Morrissette's insight: *"Chain-of-thought reasoning is powerful but blind to its own history."*
 
-| Model | Provider | Role | Strength |
-|---|---|---|---|
-| `minimax/minimax-m2.7` | MiniMax | **Team Lead** | Orchestration, planning, final synthesis |
-| `z-ai/glm-5-turbo` | ZhipuAI | **Researcher** | Web research, fact-gathering |
-| `nvidia/nemotron-3-super-120b-a12b:free` | OpenRouter | **Analyst** | Deep analysis, structured reasoning |
-| `stepfun/step-3.5-flash:free` | OpenRouter | **Reviewer** | Code/doc review, critique |
-| `openrouter/free` | OpenRouter | **Debater** | Counter-arguments, weakness identification |
-| `chandra-ocr` | Datalab | **Extractor** | PDF/document → structured text/tables |
-
-**Free tier only** — zero API cost for sub-agents.
-
----
-
-## Hyper-Agent Architecture
+This pipeline integrates a **Knowledge Graph** into the Chain-of-Thought reasoning loop:
+- **NOT** input to the chain
+- **BUT** corrective/guiding mechanism **between steps**
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│  HYPER LAYER (Meta-Agent)                              │
-│  • Monitors base agent performance                      │
-│  • Adjusts prompts/rules in real-time                  │
-│  • Self-evolution during task execution                │
-└────────────────────────┬────────────────────────────────┘
+[CoT Step N] → KG Query → Pattern Match? 
+                              ↓
+              ┌─ YES → INTERVENE (prevent mistake)
+              └─ NO  → Proceed
+```
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  HYPER LAYER (KG-CoT Enhanced)                            │
+│  • Pre-check: Query KG before each agent execution        │
+│  • Post-evaluate: Learn from results                      │
+│  • Intervene mid-chain to prevent known failures          │
+└────────────────────────┬──────────────────────────────────┘
                          │
-┌────────────────────────▼────────────────────────────────┐
-│  BASE AGENT LAYER                                       │
-│                                                          │
-│  Lead (minimax)  →  Orchestration + Planning            │
-│      ↓                                                    │
-│  ┌──────────┬──────────┬──────────┬──────────┐        │
-│  │Researcher│ Analyst  │ Reviewer │Extractor │        │
-│  │ (GLM)    │(Nemotron)│(Stepfun) │(Chandra) │        │
-│  └──────────┴──────────┴──────────┴──────────┘        │
-│      ↓                                                    │
-│  Synthesizer (minimax) ← Final integration             │
-└─────────────────────────────────────────────────────────┘
+┌────────────────────────▼──────────────────────────────────┐
+│  KNOWLEDGE GRAPH                                          │
+│  • Stores observed outcomes (success/failure)             │
+│  • Pattern matching against historical mistakes            │
+│  • Deterministic corrections based on experience          │
+└───────────────────────────────────────────────────────────┘
+                         │
+┌────────────────────────▼──────────────────────────────────┐
+│  BASE AGENT LAYER                                         │
+│  Lead (minimax) → Orchestration                          │
+│  Researcher (Nemotron) → Research                         │
+│  Analyst (Nemotron) → Deep Analysis                      │
+│  Reviewer (Stepfun) → Critique                           │
+│  Debater (openrouter/free) → Counter-arguments           │
+│  Synthesizer (minimax) → Final Integration              │
+└───────────────────────────────────────────────────────────┘
 ```
 
----
+## Morrissette's KG Acquisition Modes
 
-## Self-Evolution Loop (HyperAgents-inspired)
+| Domain | Signal Source | Example |
+|---|---|---|
+| **Technical** | Logs, tests, observable failures | API errors, build failures |
+| **Documented** | Policies, architecture, rules | Encoded constraints |
+| **Conversational** | User feedback → secondary LLM | Pattern extraction |
 
-```
-LOOP until task complete:
-  1. Base agents execute their roles
-  2. Hyper Layer monitors:
-     - Success/failure patterns
-     - Token efficiency
-     - Output quality
-  3. If improvement detected → update agent prompt/strategy
-  4. If failure detected → retry with adjusted approach
-  5. Log evolution in ARP_CHANGELOG.md
-```
-
-**Evolution triggers:**
-- Task success → refine approach
-- Task failure → modify strategy
-- Token threshold → switch model
-- Quality gate fail → enhance prompt
-
----
-
-## Fault Tolerance (AgentScope-inspired)
-
-| Error Type | Handling |
-|---|---|
-| API timeout | Auto-retry (3x) |
-| Model unavailable | Switch to fallback model |
-| JSON parse error | Rule-based correction |
-| Quality gate fail | Hyper Layer intervention |
-| Unresolvable | Log + escalate to Lead |
-
----
-
-## Phase Flow
+## How KG-CoT Works
 
 ```
-User Input → Lead (minimax)
-    ↓
-Phase 1: PLAN — Break into tasks, assign roles
-    ↓
-Phase 2: EXECUTE (parallel)
-    ├── Researcher (GLM) → Web research + PDF links
-    ├── Analyst (Nemotron) → Deep analysis
-    ├── Reviewer (Stepfun) → Critique
-    └── Extractor (Chandra) → PDF/document → structured text  ← NEW
-    ↓
-Phase 3: HYPER MONITOR — Check quality gates
-    ↓
-Phase 4: DEBATE — Debater challenges conclusions
-    ↓
-Phase 5: SYNTHESIZE — Lead integrates all outputs
-    ↓
-Phase 6: EVOLVE — Log lessons, update approach
+1. Agent proposes next step
+2. Hyper Layer queries KG for matching failure patterns
+3. If match found:
+   - INTERVENE with warning
+   - Redirect before mistake propagates
+4. Execute with awareness of history
+5. Post-evaluate: Learn from result
+6. Update KG with new pattern
 ```
-
----
 
 ## Token Strategy
 
-- **minimax-m2.7**: Lead + final synthesis only
-- **nemotron**: Analyst (free) — deep dive tasks
-- **GLM-5**: Researcher (free tier) — web research
-- **stepfun/flash**: Reviewer (free) — lightweight critique
-- **openrouter/free**: Debater (free) — devil's advocate
+- **minimax-m2.7**: Lead + synthesis (your model)
+- **nemotron**: Researcher + Analyst (free)
+- **stepfun/flash**: Reviewer (free)
+- **openrouter/free**: Debater (free)
 
----
+## Usage
 
-## Invocation
-
-```
-/arp-v3 <topic or project description>
+```bash
+python3 orchestrator.py "<research topic>"
 ```
 
----
+## Output
+
+```
+outputs/<slug>/
+├── FINAL.md
+├── research.md
+├── analysis.md
+├── review.md
+├── debate.md
+├── synthesis.md
+├── hyper-report.md
+└── knowledge-graph.md  ← KG dump with all patterns
+```
 
 ## Inspired By
 
-- [HyperAgents (ICLR 2026)](https://arxiv.org/abs/2502.hyperagents) — Self-evolving meta-agent
-- [AgentScope (Alibaba)](https://arxiv.org/html/2402.14034v2) — Fault tolerance, pipeline abstraction
-- [Chandra OCR (Datalab)](https://github.com/datalab-to/chandra) — Document intelligence, PDF extraction
-- [auto-research-pipeline](https://github.com/ohbryt/auto-research-pipeline) — Base architecture
+- [J Morrissette - Knowledge Graphs as Real-Time Correction in CoT](https://substack.com)
+- [HyperAgents (ICLR 2026)](https://arxiv.org/abs/2502.hyperagents)
+- [AgentScope (Alibaba)](https://arxiv.org/html/2402.14034v2)
+- [Chandra OCR](https://github.com/datalab-to/chandra)
