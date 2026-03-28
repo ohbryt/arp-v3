@@ -6,6 +6,8 @@
 
 ARP v5 is the latest version of our autonomous research pipeline, combining:
 
+- **Novel Discovery Engine**: Beyond literature-known compounds
+
 - **Multi-Model SubAgents**: Gemini, GLM-5, Nemotron, Stepfun (cost-optimized)
 - **KG-CoT**: Knowledge Graph for real-time Chain-of-Thought correction
 - **AI Scientist**: Fully automated paper generation (Nature 2026)
@@ -13,6 +15,28 @@ ARP v5 is the latest version of our autonomous research pipeline, combining:
 - **RunPod GPU**: Cloud GPU for heavy computation
 - **Social Intelligence**: last30days for trend research
 - **Multimodal**: Gemini Embedding 2, Chandra OCR
+
+## Novel Discovery Engine
+
+Beyond literature-known compounds, ARP v5 includes:
+
+### 1. De Novo Molecular Generation
+- Diffusion-based new scaffolds
+- Microproteins/peptoids
+- Novel ring systems
+- Unprecedented chemical space
+
+### 2. Novel Target Discovery
+- CRISPR screen databases
+- Understudied proteins (IDG)
+- Novel protein interactions
+- New disease connections
+
+### 3. Extremophile Exploration
+- Deep sea organisms
+- Microbiome-derived
+- Fungal metabolites
+- Rare actinomycetes
 
 ## Architecture
 

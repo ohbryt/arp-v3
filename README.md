@@ -9,6 +9,7 @@ ARP v5 is our fully autonomous research pipeline that combines cutting-edge AI t
 
 ## Features
 
+- **Novel Discovery Engine**: Beyond literature-known compounds
 - **Multi-Model SubAgents**: Dynamically route tasks to optimal models (Gemini, GLM-5, Nemotron, etc.)
 - **KG-CoT**: Knowledge Graph-guided Chain-of-Thought for real-time correction
 - **AI Scientist**: Automated paper generation (Nature 2026)
@@ -31,6 +32,9 @@ python3 reasoning.py
 
 # Drug Discovery
 python3 discovery_pipeline.py "SIRT3"
+
+# Novel Discovery (beyond literature)
+python3 novel_discovery.py
 
 # AI Scientist (requires RunPod GPU)
 export RUNPOD_API_KEY=your_key
