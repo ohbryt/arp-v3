@@ -9,6 +9,7 @@ ARP v5 is our fully autonomous research pipeline that combines cutting-edge AI t
 
 ## Features
 
+- **Literature Search Module**: Real PubMed compounds with PMIDs
 - **Novel Discovery Engine**: Beyond literature-known compounds
 - **Multi-Model SubAgents**: Dynamically route tasks to optimal models (Gemini, GLM-5, Nemotron, etc.)
 - **KG-CoT**: Knowledge Graph-guided Chain-of-Thought for real-time correction

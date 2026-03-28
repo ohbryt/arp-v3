@@ -337,37 +337,69 @@ class SubAgentRunner:
         print(f"ARP v4 Multi-Model Pipeline: {topic}")
         print(f"{'='*60}\n")
         
-        # Step 1: Research
-        print("[1/5] Research (Nemotron, free)...")
-        research = self.run_researcher(topic)
+        # Step 1: Literature Search
+        print("[0/5] Literature Search (Gemini Flash, literature research)...")
+        literature = self.run_literature_search(topic)
         
-        # Step 2: Analysis
+        # Step 2: Research
+        print("\n[1/5] Research (Nemotron, free)...")
+        research = self.run_researcher(topic, context=literature)
+        
+        # Step 3: Analysis
         print("\n[2/5] Analysis (Gemini Flash, fast)...")
         analysis = self.run_analyst(topic, context=research)
         
-        # Step 3: Review
+        # Step 4: Review
         print("\n[3/5] Review (Stepfun, free)...")
         review = self.run_reviewer(topic, context=f"Research:\n{research}\n\nAnalysis:\n{analysis}")
         
-        # Step 4: Debate
+        # Step 5: Debate
         print("\n[4/5] Debate (OpenRouter Free)...")
         debate = self.run_debater(topic, context=f"Research:\n{research}\n\nAnalysis:\n{analysis}")
         
-        # Step 5: Synthesis
+        # Step 6: Synthesis
         print("\n[5/5] Synthesis (Gemini Flash)...")
         synthesis = self.run_synthesizer(
             topic,
-            context=f"Research:\n{research}\n\nAnalysis:\n{analysis}\n\nReview:\n{review}\n\nDebate:\n{debate}"
+            context=f"Literature:\n{literature}\n\nResearch:\n{research}\n\nAnalysis:\n{analysis}\n\nReview:\n{review}\n\nDebate:\n{debate}"
         )
         
         return {
             "topic": topic,
+            "literature": literature,
             "research": research,
             "analysis": analysis,
             "review": review,
             "debate": debate,
             "synthesis": synthesis
         }
+    
+    def run_literature_search(self, topic: str) -> str:
+        """Run literature search subagent."""
+        from literature_search import generate_literature_report, get_real_extremophile_compounds, get_real_crispr_hits, get_real_understudied_proteins
+        
+        # Generate literature report from real databases
+        report = generate_literature_report(topic)
+        
+        # Enhance with LLM analysis
+        prompt = f"""Analyze this literature search results and identify:
+1. The most promising novel targets (not well-established like PINK1/Parkin)
+2. Real compounds with mitophagy-activating potential
+3. Gaps in current research that could be filled
+
+Literature Results:
+{report}
+
+Provide a structured analysis focusing on NOVEL candidates for drug discovery."""
+        
+        analysis = self.run(
+            task=prompt,
+            model="gemini-flash",
+            system_prompt="You are a literature analyst. Focus on novel, understudied targets.",
+            context=None
+        )
+        
+        return f"{report}\n\n## LLM Analysis\n{analysis}"
 
 
 # ─── Cost Tracker ───────────────────────────────────────────────────────────

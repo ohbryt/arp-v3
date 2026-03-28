@@ -20,19 +20,25 @@ ARP v5 is the latest version of our autonomous research pipeline, combining:
 
 Beyond literature-known compounds, ARP v5 includes:
 
-### 1. De Novo Molecular Generation
+### 1. Literature Search Module (REAL)
+- Real PubMed compounds with PMIDs
+- Real CRISPR screen hits
+- Real IDG understudied proteins
+- LLM-powered literature analysis
+
+### 2. De Novo Molecular Generation
 - Diffusion-based new scaffolds
 - Microproteins/peptoids
 - Novel ring systems
 - Unprecedented chemical space
 
-### 2. Novel Target Discovery
+### 3. Novel Target Discovery
 - CRISPR screen databases
 - Understudied proteins (IDG)
 - Novel protein interactions
 - New disease connections
 
-### 3. Extremophile Exploration
+### 4. Extremophile Exploration
 - Deep sea organisms
 - Microbiome-derived
 - Fungal metabolites
