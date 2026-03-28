@@ -1,25 +1,49 @@
-# ARP v3 — Hyper-Agent Research Pipeline
+# ARP v4 — Hyper-Agent Research Pipeline
 
-> Multi-LLM team with Knowledge Graph CoT + Drug Discovery + Multimodal Embedding
+> Multi-LLM team with Knowledge Graph CoT + Drug Discovery + Multimodal Embedding + Social Trend Intelligence + Advanced Reasoning
 
-## Concept
+## Overview
 
-Based on J Morrissette's insight: *"Chain-of-thought reasoning is powerful but blind to its own history."*
+ARP v4 is an autonomous research pipeline that combines:
+
+- **HyperAgents (ICLR 2026)** — Self-evolving meta-agent
+- **AgentScope (Alibaba)** — Fault tolerance and pipeline abstraction
+- **Morrissette's KG-CoT** — Knowledge Graph for real-time correction in chain-of-thought
+- **ARC-AGI-3** — Abstraction and reasoning benchmark
+- **ACP-ConditionalDiffusion** — Diffusion-based peptide generation for drug discovery
+- **Chandra OCR** — Document intelligence for PDF extraction
+- **Gemini Embedding 2** — Unified multimodal embedding (text/image/video/audio/PDF)
+- **last30days** — Social trend intelligence (Reddit, HN, Polymarket, Bluesky, X)
+- **System 2 Reasoning** — Slow, deliberate reasoning with self-verification
 
 ## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  HYPER LAYER (KG-CoT Enhanced)                            │
-│  • Pre-check: Query KG before each agent execution        │
+│  • Pre-check: Query KG before each agent execution         │
 │  • Post-evaluate: Learn from results                      │
-│  • Intervene mid-chain to prevent known failures          │
+│  • Intervene mid-chain to prevent known failures           │
+└────────────────────────────────────────────────────────────┘
+                         │
+┌────────────────────────────────────────────────────────────┐
+│  REASONING LAYER (System 2)                               │
+│  • Chain-of-Thought reasoning                              │
+│  • Chain-of-Verification (reduce hallucinations)           │
+│  • Abstraction & pattern recognition (ARC-AGI style)       │
+│  • Self-verification after each step                      │
 └────────────────────────────────────────────────────────────┘
                          │
 ┌────────────────────────────────────────────────────────────┐
 │  KNOWLEDGE GRAPH                                          │
-│  • Stores observed outcomes (success/failure)              │
-│  • Pattern matching against historical mistakes            │
+│  • Stores observed outcomes (success/failure)             │
+│  • Pattern matching against historical mistakes             │
+└────────────────────────────────────────────────────────────┘
+                         │
+┌────────────────────────────────────────────────────────────┐
+│  SOCIAL INTELLIGENCE (last30days)                        │
+│  • Reddit, X, HN, Polymarket, Bluesky, YouTube           │
+│  • Real-time community trends and sentiment                │
 └────────────────────────────────────────────────────────────┘
                          │
 ┌────────────────────────────────────────────────────────────┐
@@ -28,20 +52,14 @@ Based on J Morrissette's insight: *"Chain-of-thought reasoning is powerful but b
 └────────────────────────────────────────────────────────────┘
                          │
 ┌────────────────────────────────────────────────────────────┐
-│  DRUG DISCOVERY MODULE                                    │
-│  • Target identification • Peptide generation               │
-│  • Validation • Ranking                                    │
-└────────────────────────────────────────────────────────────┘
-                         │
-┌────────────────────────────────────────────────────────────┐
-│  MULTIMODAL EMBEDDING (Gemini Embedding 2)                │
-│  • Text • Image • Video • Audio • PDF                     │
-│  • MRL dimensions: 3072/1536/768                          │
-│  • RAG: Unified semantic search                            │
+│  MULTIMODAL MODULES                                      │
+│  • Gemini Embedding 2 (text/image/video/audio/PDF)      │
+│  • Chandra OCR (document extraction)                       │
+│  • Drug Discovery (peptide generation)                    │
 └────────────────────────────────────────────────────────────┘
 ```
 
-## Three Modes
+## Research Modes
 
 ### 1. Research Mode (ARP Agents)
 ```bash
@@ -53,19 +71,16 @@ python3 orchestrator.py "<research topic>"
 python3 discovery_pipeline.py "<drug target>"
 ```
 
-### 3. Multimodal RAG Mode
-```python
-from data.multimodal import MultimodalEmbedder, SimpleVectorStore
+### 3. Social Trend Mode (last30days)
+```bash
+cd ~/.openclaw/workspace/skills/last30days
+python3 scripts/last30days.py "<topic>"
+```
 
-embedder = MultimodalEmbedder()  # Needs GOOGLE_API_KEY
-store = SimpleVectorStore(embedder)
-
-# Add research materials
-store.add_text("SIRT3 mitophagy mechanism...")
-store.add_pdf("paper.pdf")
-
-# Search across all modalities
-results = store.search("What activates mitophagy?")
+### 4. Reasoning Mode
+```bash
+python3 reasoning.py  # Demo
+python3 reasoning.py --task "<reasoning task>"
 ```
 
 ## Drug Discovery Targets
@@ -78,23 +93,43 @@ results = store.search("What activates mitophagy?")
 | PD-L1 | Cancer immunotherapy | High |
 | TNF-α | Inflammation | High |
 
-## Multimodal Embedding (Gemini Embedding 2)
+## Reasoning Capabilities
 
-| Format | Capability |
-|--------|------------|
-| Text | 8,192 tokens, 100+ languages |
-| Image | Up to 6 per request |
-| Video | Up to 120 seconds |
-| Audio | Direct processing (no transcription) |
-| PDF | Direct processing |
+### System 2 Reasoning
+- Slow, deliberate chain-of-thought
+- Self-verification after each step
+- Confidence calibration
 
-**MRL Dimensions:** 3072 (precise) / 1536 (balanced) / 768 (fast)
+### Chain-of-Verification
+- Extract claims from output
+- Verify each claim independently
+- Identify contradictions and uncertainties
+
+### ARC-AGI Style Abstraction
+- Surface pattern vs deep structure
+- Invariant properties
+- Transformation rules
+- Analogical reasoning
+
+## last30days Sources
+
+| Source | Status | Auth Required |
+|--------|--------|---------------|
+| Reddit | ✅ | OpenAI/Codex auth |
+| Hacker News | ✅ | None |
+| Polymarket | ✅ | None |
+| Bluesky | ⚡ | BSKY credentials |
+| X/Twitter | ❌ | AUTH_TOKEN + CT0 |
+| YouTube | ❌ | yt-dlp |
+| TikTok/Instagram | ⚡ | ScrapeCreators API |
 
 ## Inspired By
 
 - [J Morrissette - KG-CoT](https://substack.com)
+- [ARC-AGI-3 (Symbolica)](https://github.com/symbolica-ai/ARC-AGI-3-Agents)
 - [ACP-ConditionalDiffusion](https://github.com/yidingneng/ACP-ConditionalDiffusion)
 - [HyperAgents (ICLR 2026)](https://arxiv.org/abs/2502.hyperagents)
 - [AgentScope (Alibaba)](https://arxiv.org/html/2402.14034v2)
 - [Chandra OCR](https://github.com/datalab-to/chandra)
 - [Gemini Embedding 2 (Google)](https://ai.google.dev)
+- [last30days (mvanhorn)](https://github.com/mvanhorn/last30days-skill)

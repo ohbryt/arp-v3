@@ -1,16 +1,18 @@
-# ARP v3 KG-CoT — Hyper-Agent Research Pipeline
+# ARP v4 — Hyper-Agent Research Pipeline
 
-> Multi-LLM research team with Knowledge Graph CoT + self-evolution + Drug Discovery
+> Multi-LLM research team with Knowledge Graph CoT + Drug Discovery + Multimodal Embedding + Social Trend Intelligence
 
 ## Overview
 
-ARP v3 is an autonomous research pipeline that combines:
+ARP v4 is an autonomous research pipeline that combines:
 
 - **HyperAgents (ICLR 2026)** — Self-evolving meta-agent
 - **AgentScope (Alibaba)** — Fault tolerance and pipeline abstraction
 - **Morrissette's KG-CoT** — Knowledge Graph for real-time correction in chain-of-thought
 - **ACP-ConditionalDiffusion** — Diffusion-based peptide generation for drug discovery
 - **Chandra OCR** — Document intelligence for PDF extraction
+- **Gemini Embedding 2** — Unified multimodal embedding (text/image/video/audio/PDF)
+- **last30days** — Social trend intelligence (Reddit, HN, Polymarket, Bluesky, X)
 
 ## Architecture
 
@@ -20,37 +22,48 @@ ARP v3 is an autonomous research pipeline that combines:
 │  • Pre-check: Query KG before each agent execution        │
 │  • Post-evaluate: Learn from results                      │
 │  • Intervene mid-chain to prevent known failures          │
-└────────────────────────┬──────────────────────────────────┘
+└────────────────────────────────────────────────────────────┘
                          │
-┌────────────────────────▼──────────────────────────────────┐
+┌────────────────────────────────────────────────────────────┐
 │  KNOWLEDGE GRAPH                                          │
-│  • Stores observed outcomes (success/failure)             │
-│  • Pattern matching against historical mistakes            │
-└───────────────────────────────────────────────────────────┘
+│  • Stores observed outcomes (success/failure)              │
+│  • Pattern matching against historical mistakes             │
+└────────────────────────────────────────────────────────────┘
                          │
-┌────────────────────────▼──────────────────────────────────┐
+┌────────────────────────────────────────────────────────────┐
+│  SOCIAL INTELLIGENCE (last30days)                         │
+│  • Reddit, X, HN, Polymarket, Bluesky, YouTube           │
+│  • Real-time community trends and sentiment               │
+└────────────────────────────────────────────────────────────┘
+                         │
+┌────────────────────────────────────────────────────────────┐
 │  BASE AGENT LAYER                                         │
 │  Lead + Researcher + Analyst + Reviewer + Debater         │
-└───────────────────────────────────────────────────────────┘
+└────────────────────────────────────────────────────────────┘
                          │
-┌────────────────────────▼──────────────────────────────────┐
-│  DRUG DISCOVERY MODULE                                    │
-│  • Target identification • Peptide generation             │
-│  • Validation • ADMET analysis • Ranking                  │
-└───────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────┐
+│  MULTIMODAL MODULES                                      │
+│  • Gemini Embedding 2 (text/image/video/audio/PDF)       │
+│  • Chandra OCR (document extraction)                       │
+│  • Drug Discovery (peptide generation)                     │
+└────────────────────────────────────────────────────────────┘
 ```
 
 ## Quick Start
 
 ```bash
-# Research mode — any topic
+# Social trend research (last30days)
+cd ~/.openclaw/workspace/skills/last30days
+python3 scripts/last30days.py "SIRT3 longevity research"
+
+# Research mode (ARP agents)
 python3 orchestrator.py "Urolithin A for sarcopenia"
 
-# Drug discovery mode — specific targets
+# Drug discovery mode
 python3 discovery_pipeline.py "SIRT3 mitophagy activators"
 ```
 
-## Two Modes
+## Three Core Modes
 
 ### Research Mode
 Multi-agent LLM team for literature review, analysis, and synthesis.
@@ -63,28 +76,27 @@ Complete peptide drug discovery workflow with:
 - Modification suggestions
 - Candidate ranking
 
-## Drug Discovery Targets
-
-| Target | Pathway | Priority |
-|--------|---------|----------|
-| SIRT3 | Mitophagy activation | High |
-| PGC-1α | Mitochondrial biogenesis | Medium |
-| FOXO3 | Cellular longevity | Medium |
-| PD-L1 | Cancer immunotherapy | High |
-| TNF-α | Inflammation | High |
-| KRAS | Oncogenic | High |
+### Social Intelligence Mode (last30days)
+Discover what communities are actually discussing:
+- Reddit threads and comments
+- Hacker News discussions
+- Polymarket prediction markets
+- Bluesky/X trends
 
 ## Installation
 
 ```bash
+# Clone the repo
 git clone https://github.com/ohbryt/arp-v3.git
 cd arp-v3
 
-# Optional: For peptide generation (requires ACP-ConditionalDiffusion)
-# git clone https://github.com/yidingneng/ACP-ConditionalDiffusion.git
+# Install last30days (optional but recommended)
+git clone https://github.com/mvanhorn/last30days-skill.git \
+  ~/.openclaw/workspace/skills/last30days
 
-# Optional: For document extraction
-pip install chandra-ocr[hf]
+# Optional dependencies
+pip install google-genai  # Gemini Embedding 2
+pip install chandra-ocr   # Document extraction
 ```
 
 ## Key Innovation: KG-CoT
