@@ -1,148 +1,123 @@
-# ARP v4 — Hyper-Agent Research Pipeline
+# ARP v5 — Autonomous Research Pipeline
 
-> Multi-LLM team with Knowledge Graph CoT + AI Scientist + Multi-Model SubAgents
+> Multi-Model Multi-Agent Research System with AI Scientist
 
 ## Overview
 
-ARP v4 is an autonomous research pipeline that combines:
+ARP v5 is the latest version of our autonomous research pipeline, combining:
 
-- **HyperAgents (ICLR 2026)** — Self-evolving meta-agent
-- **AgentScope (Alibaba)** — Fault tolerance and pipeline abstraction
-- **Morrissette's KG-CoT** — Knowledge Graph for real-time correction in chain-of-thought
-- **AI Scientist (Nature 2026)** — Fully automated paper generation with peer review
-- **Multi-Model SubAgents** — Dynamic model routing with cost optimization
-- **Gemini 3.1 Flash Lite** — Fast, cheap primary subagent
-- **RunPod GPU** — Cloud GPU for AI Scientist execution
-- **last30days** — Social trend intelligence (Reddit, HN, Polymarket)
-- **Gemini Embedding 2** — Unified multimodal embedding
-- **System 2 Reasoning** — Slow, deliberate reasoning with self-verification
+- **Multi-Model SubAgents**: Gemini, GLM-5, Nemotron, Stepfun (cost-optimized)
+- **KG-CoT**: Knowledge Graph for real-time Chain-of-Thought correction
+- **AI Scientist**: Fully automated paper generation (Nature 2026)
+- **System 2 Reasoning**: Slow, deliberate reasoning with self-verification
+- **RunPod GPU**: Cloud GPU for heavy computation
+- **Social Intelligence**: last30days for trend research
+- **Multimodal**: Gemini Embedding 2, Chandra OCR
 
-## Multi-Model Architecture
+## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  MODEL ROUTER (Cost Optimizer)                            │
-│  Task → Best model based on: cost, speed, capability      │
-└─────────────────────────────────────────────────────────────┘
+│  HYPER LAYER (KG-CoT Enhanced)                            │
+│  • Pre-check: Query KG before each agent execution        │
+│  • Post-evaluate: Learn from results                      │
+│  • Intervene mid-chain to prevent known failures           │
+└────────────────────────────────────────────────────────────┘
                          │
 ┌────────────────────────────────────────────────────────────┐
-│  SUBAGENT TEAM                                           │
+│  MODEL ROUTER (Cost Optimizer)                           │
+│  Task → Best model based on: cost, speed, capability       │
+└────────────────────────────────────────────────────────────┘
+                         │
+┌────────────────────────────────────────────────────────────┐
+│  SUBAGENT TEAM (Multi-Model)                             │
 │  ┌──────────────┬──────────────┬──────────────┐          │
 │  │ Researcher   │ Analyst      │ Reviewer     │          │
 │  │ (Nemotron)  │ (Gemini)     │ (Stepfun)    │          │
 │  ├──────────────┼──────────────┼──────────────┤          │
 │  │ Debater     │ Synthesizer  │ Generator    │          │
-│  │ (Free)      │ (Gemini)     │ (Gemini)     │          │
+│  │ (GLM-5)    │ (Gemini)     │ (GLM-5)     │          │
 │  └──────────────┴──────────────┴──────────────┘          │
 └────────────────────────────────────────────────────────────┘
                          │
 ┌────────────────────────────────────────────────────────────┐
-│  GEMINI 3.1 FLASH LITE (Primary SubAgent)                │
-│  Fast: 1M tokens/min • Cheap: $0.075/1M tokens            │
-│  1M context window • Multimodal • Function calling          │
+│  AI SCIENTIST LAYER (Nature 2026)                        │
+│  Idea → Code → Experiment → Paper → Review               │
+│  (Runs on RunPod GPU)                                    │
+└────────────────────────────────────────────────────────────┘
+                         │
+┌────────────────────────────────────────────────────────────┐
+│  REASONING LAYER (System 2)                              │
+│  Chain-of-Thought + Chain-of-Verification                 │
 └────────────────────────────────────────────────────────────┘
 ```
 
 ## Model Roster
 
-| Model | Role | Cost | Speed | Strength |
-|-------|------|------|-------|----------|
-| **Gemini 3.1 Flash Lite** | Primary subagent | $0.075/1M | ⚡⚡⚡ | Fast, cheap, good reasoning |
-| **Gemini 3.1 Pro** | Deep reasoning | $1.00/1M | ⚡⚡ | Large context, deep analysis |
-| **GLM-5 (ZhipuAI)** | Bulk tasks | $0.72/1M | ⚡⚡⚡ | Very cheap, good quality |
-| **GLM-4.5 Free** | Free tasks | FREE | ⚡⚡ | Free, ZhipuAI quality |
-| **Nemotron 120B** | Research | FREE | ⚡⚡ | Good reasoning, no cost |
-| **Stepfun 3.5** | Review | FREE | ⚡⚡⚡ | Fast, free |
-| **OpenRouter Free** | Fallback | FREE | ⚡⚡ | Always available |
+| Model | Role | Cost | Strength |
+|-------|------|------|----------|
+| **Gemini 3.1 Flash Lite** | Primary | $0.075/1M | Fast, cheap, good |
+| **GLM-5 (ZhipuAI)** | Generator | $0.72/1M | Very cheap, good quality |
+| **Nemotron 120B** | Research | FREE | Good reasoning, no cost |
+| **GLM-4.5 Free** | Tasks | FREE | Free, ZhipuAI quality |
+| **Stepfun 3.5** | Review | FREE | Fast, free |
+| **OpenRouter Free** | Fallback | FREE | Always available |
 
 ## Run Modes
 
-### 1. CPU Mode (Free Tier)
+### 1. Research Mode (SubAgents)
 ```bash
-python3 subagent.py                    # Multi-model pipeline
-python3 orchestrator.py "topic"       # Original ARP agents
-python3 reasoning.py                   # System 2 reasoning
+python3 subagent.py
 ```
 
-### 2. GPU Mode (RunPod)
+### 2. Original Orchestrator
+```bash
+python3 orchestrator.py "topic"
+```
+
+### 3. System 2 Reasoning
+```bash
+python3 reasoning.py
+```
+
+### 4. Drug Discovery
+```bash
+python3 discovery_pipeline.py "drug target"
+```
+
+### 5. AI Scientist (GPU)
 ```bash
 export RUNPOD_API_KEY=your_key
-python3 run_aiscientist.py --gpu "AI Scientist experiment"
+python3 run_aiscientist.py --gpu "experiment"
 ```
 
-## Pipeline Flow
+## Key Features
 
-```
-User Input → Model Router (cost optimizer)
-                    ↓
-    ┌───────────────┼───────────────┐
-    ↓               ↓               ↓
-Researcher     Analyst          Reviewer
-(Nemotron)    (Gemini)         (Stepfun)
-    │               │               │
-    └───────────────┼───────────────┘
-                    ↓
-              Debater (GLM-5)
-                    ↓
-              Synthesizer (Gemini)
-                    ↓
-            Knowledge Graph (KG-CoT)
-                    ↓
-               Final Output
-```
+### KG-CoT (Morrissette)
+- Query KG before each step
+- Learn from execution results
+- Prevent known failures
 
-## AI Scientist Pipeline (RunPod GPU)
+### AI Scientist (Nature 2026)
+- Fully automated paper generation
+- Peer review quality assessment
+- Runs on RunPod GPU
 
-```
-Idea Generation (LLM)
-        ↓
-Code Writing (LLM)
-        ↓
-Experiment Execution (RunPod GPU)
-        ↓
-Paper Writing (LaTeX)
-        ↓
-Peer Review (AI Scientist)
-        ↓
-Quality Assessment
-```
-
-## Usage Examples
-
-```bash
-# Multi-model subagent pipeline
-python3 subagent.py
-
-# Run specific subagent
-from subagent import SubAgentRunner
-runner = SubAgentRunner()
-runner.run_full_pipeline("SIRT3 mitophagy research")
-
-# Use specific model
-runner.run("Analyze this", model="gemini-flash")
-runner.run("Research topic", model="nemotron")
-```
-
-## Cost Optimization
-
-| Task | Recommended Model | Reason |
-|------|-----------------|--------|
-| Quick analysis | Gemini Flash | Fast + cheap |
-| Deep research | Nemotron | Free + capable |
-| Simple review | Stepfun | Free + fast |
-| Complex synthesis | Gemini Pro | Deep reasoning |
-| Fallback | OpenRouter Free | Always available |
-
-**Estimated costs:**
-- Gemini Flash: $0.001 per research query
-- Full pipeline: ~$0.01 (mostly free models)
+### System 2 Reasoning
+- Slow, deliberate chain-of-thought
+- Self-verification after each step
+- Confidence calibration
 
 ## Inspired By
 
 - [J Morrissette - KG-CoT](https://substack.com)
 - [AI Scientist (Nature 2026)](https://www.nature.com/articles/s41586-026-10265-5)
 - [SakanaAI/AI-Scientist](https://github.com/SakanaAI/AI-Scientist)
-- [Gemini 3.1 Flash Lite (Google)](https://ai.google.dev)
 - [ARC-AGI-3 (Symbolica)](https://github.com/symbolica-ai/ARC-AGI-3-Agents)
+- [ACP-ConditionalDiffusion](https://github.com/yidingneng/ACP-ConditionalDiffusion)
+- [HyperAgents (ICLR 2026)](https://arxiv.org/abs/2502.hyperagents)
+- [AgentScope (Alibaba)](https://arxiv.org/html/2402.14034v2)
+- [Chandra OCR](https://github.com/datalab-to/chandra)
+- [Gemini Embedding 2 (Google)](https://ai.google.dev)
 - [last30days (mvanhorn)](https://github.com/mvanhorn/last30days-skill)
 - [RunPod](https://runpod.io)
