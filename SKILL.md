@@ -49,6 +49,8 @@ ARP v4 is an autonomous research pipeline that combines:
 |-------|------|------|-------|----------|
 | **Gemini 3.1 Flash Lite** | Primary subagent | $0.075/1M | ⚡⚡⚡ | Fast, cheap, good reasoning |
 | **Gemini 3.1 Pro** | Deep reasoning | $1.00/1M | ⚡⚡ | Large context, deep analysis |
+| **GLM-5 (ZhipuAI)** | Bulk tasks | $0.72/1M | ⚡⚡⚡ | Very cheap, good quality |
+| **GLM-4.5 Free** | Free tasks | FREE | ⚡⚡ | Free, ZhipuAI quality |
 | **Nemotron 120B** | Research | FREE | ⚡⚡ | Good reasoning, no cost |
 | **Stepfun 3.5** | Review | FREE | ⚡⚡⚡ | Fast, free |
 | **OpenRouter Free** | Fallback | FREE | ⚡⚡ | Always available |
@@ -80,7 +82,7 @@ Researcher     Analyst          Reviewer
     │               │               │
     └───────────────┼───────────────┘
                     ↓
-              Debater (Free)
+              Debater (GLM-5)
                     ↓
               Synthesizer (Gemini)
                     ↓
