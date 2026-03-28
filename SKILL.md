@@ -1,6 +1,6 @@
 # ARP v4 — Hyper-Agent Research Pipeline
 
-> Multi-LLM team with Knowledge Graph CoT + Drug Discovery + Multimodal Embedding + Social Trend Intelligence + Advanced Reasoning
+> Multi-LLM team with Knowledge Graph CoT + Drug Discovery + Multimodal Embedding + Social Trend Intelligence + Advanced Reasoning + AI Scientist
 
 ## Overview
 
@@ -9,12 +9,14 @@ ARP v4 is an autonomous research pipeline that combines:
 - **HyperAgents (ICLR 2026)** — Self-evolving meta-agent
 - **AgentScope (Alibaba)** — Fault tolerance and pipeline abstraction
 - **Morrissette's KG-CoT** — Knowledge Graph for real-time correction in chain-of-thought
+- **AI Scientist (Nature 2026)** — Fully automated paper generation with peer review
 - **ARC-AGI-3** — Abstraction and reasoning benchmark
 - **ACP-ConditionalDiffusion** — Diffusion-based peptide generation for drug discovery
 - **Chandra OCR** — Document intelligence for PDF extraction
 - **Gemini Embedding 2** — Unified multimodal embedding (text/image/video/audio/PDF)
 - **last30days** — Social trend intelligence (Reddit, HN, Polymarket, Bluesky, X)
 - **System 2 Reasoning** — Slow, deliberate reasoning with self-verification
+- **RunPod GPU** — Cloud GPU for AI Scientist execution
 
 ## Architecture
 
@@ -27,60 +29,83 @@ ARP v4 is an autonomous research pipeline that combines:
 └────────────────────────────────────────────────────────────┘
                          │
 ┌────────────────────────────────────────────────────────────┐
-│  REASONING LAYER (System 2)                               │
+│  REASONING LAYER (System 2)                              │
 │  • Chain-of-Thought reasoning                              │
 │  • Chain-of-Verification (reduce hallucinations)           │
-│  • Abstraction & pattern recognition (ARC-AGI style)       │
-│  • Self-verification after each step                      │
+│  • Abstraction & pattern recognition (ARC-AGI style)        │
+└────────────────────────────────────────────────────────────┘
+                         │
+┌────────────────────────────────────────────────────────────┐
+│  AI SCIENTIST LAYER (Nature 2026)                        │
+│  • Idea generation → Code → Experiment → Paper → Review   │
+│  • Runs on RunPod GPU (cloud)                             │
+│  • Peer review quality assessment                          │
 └────────────────────────────────────────────────────────────┘
                          │
 ┌────────────────────────────────────────────────────────────┐
 │  KNOWLEDGE GRAPH                                          │
-│  • Stores observed outcomes (success/failure)             │
+│  • Stores observed outcomes (success/failure)              │
 │  • Pattern matching against historical mistakes             │
 └────────────────────────────────────────────────────────────┘
                          │
 ┌────────────────────────────────────────────────────────────┐
-│  SOCIAL INTELLIGENCE (last30days)                        │
+│  SOCIAL INTELLIGENCE (last30days)                         │
 │  • Reddit, X, HN, Polymarket, Bluesky, YouTube           │
 │  • Real-time community trends and sentiment                │
 └────────────────────────────────────────────────────────────┘
                          │
 ┌────────────────────────────────────────────────────────────┐
 │  BASE AGENT LAYER                                         │
-│  Lead + Researcher + Analyst + Reviewer + Debater          │
+│  Lead + Researcher + Analyst + Reviewer + Debater        │
 └────────────────────────────────────────────────────────────┘
                          │
 ┌────────────────────────────────────────────────────────────┐
-│  MULTIMODAL MODULES                                      │
-│  • Gemini Embedding 2 (text/image/video/audio/PDF)      │
-│  • Chandra OCR (document extraction)                       │
-│  • Drug Discovery (peptide generation)                    │
+│  MULTIMODAL MODULES                                       │
+│  • Gemini Embedding 2 (text/image/video/audio/PDF)         │
+│  • Chandra OCR (document extraction)                      │
+│  • Drug Discovery (peptide generation)                     │
 └────────────────────────────────────────────────────────────┘
 ```
 
-## Research Modes
+## Run Modes
 
-### 1. Research Mode (ARP Agents)
+### 1. CPU Mode (Free)
 ```bash
-python3 orchestrator.py "<research topic>"
+python3 run.py "SIRT3 research"                    # Reasoning
+python3 orchestrator.py "topic"                  # Research agents
+python3 discovery_pipeline.py "drug target"       # Drug discovery
 ```
 
-### 2. Drug Discovery Mode
+### 2. GPU Mode (RunPod)
 ```bash
-python3 discovery_pipeline.py "<drug target>"
+# Requires RUNPOD_API_KEY
+export RUNPOD_API_KEY=your_key
+python3 run_aiscientist.py --gpu "AI Scientist experiment"
 ```
 
-### 3. Social Trend Mode (last30days)
-```bash
-cd ~/.openclaw/workspace/skills/last30days
-python3 scripts/last30days.py "<topic>"
-```
+## GPU Options (RunPod)
 
-### 4. Reasoning Mode
-```bash
-python3 reasoning.py  # Demo
-python3 reasoning.py --task "<reasoning task>"
+| GPU | Price/hr | Use Case |
+|-----|----------|----------|
+| RTX 3090 | $0.40 | Standard AI Scientist |
+| RTX 4090 | $0.50 | Faster experiments |
+| A100 | $1.50 | Large experiments |
+| H100 | $3.00 | Production runs |
+
+## AI Scientist Pipeline
+
+```
+Idea Generation (LLM)
+        ↓
+Code Writing (LLM)
+        ↓
+Experiment Execution (RunPod GPU)
+        ↓
+Paper Writing (LaTeX)
+        ↓
+Peer Review (AI Scientist)
+        ↓
+Quality Assessment
 ```
 
 ## Drug Discovery Targets
@@ -111,21 +136,11 @@ python3 reasoning.py --task "<reasoning task>"
 - Transformation rules
 - Analogical reasoning
 
-## last30days Sources
-
-| Source | Status | Auth Required |
-|--------|--------|---------------|
-| Reddit | ✅ | OpenAI/Codex auth |
-| Hacker News | ✅ | None |
-| Polymarket | ✅ | None |
-| Bluesky | ⚡ | BSKY credentials |
-| X/Twitter | ❌ | AUTH_TOKEN + CT0 |
-| YouTube | ❌ | yt-dlp |
-| TikTok/Instagram | ⚡ | ScrapeCreators API |
-
 ## Inspired By
 
 - [J Morrissette - KG-CoT](https://substack.com)
+- [AI Scientist (Nature 2026)](https://www.nature.com/articles/s41586-026-10265-5)
+- [SakanaAI/AI-Scientist](https://github.com/SakanaAI/AI-Scientist)
 - [ARC-AGI-3 (Symbolica)](https://github.com/symbolica-ai/ARC-AGI-3-Agents)
 - [ACP-ConditionalDiffusion](https://github.com/yidingneng/ACP-ConditionalDiffusion)
 - [HyperAgents (ICLR 2026)](https://arxiv.org/abs/2502.hyperagents)
@@ -133,3 +148,4 @@ python3 reasoning.py --task "<reasoning task>"
 - [Chandra OCR](https://github.com/datalab-to/chandra)
 - [Gemini Embedding 2 (Google)](https://ai.google.dev)
 - [last30days (mvanhorn)](https://github.com/mvanhorn/last30days-skill)
+- [RunPod](https://runpod.io)
